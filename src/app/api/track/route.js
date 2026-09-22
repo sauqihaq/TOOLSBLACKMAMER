@@ -9,30 +9,50 @@ export async function GET(request) {
     }
 
     try {
-        // Di sini kita mensimulasikan fetching ke berbagai API (Instagram, Twitter, TikTok)
-        // Dalam produksi, kamu bisa menggunakan library seperti 'axios' untuk hit API pihak ketiga.
+        // Contoh jika kamu menggunakan API pihak ketiga (Sesuaikan URL & Key-nya)
+        // Jika belum ada provider tetap, kita pakai logic sederhana dulu
+        const response = await fetch(`https://api.example.com/social?user=${username}`, {
+            headers: {
+                'X-RapidAPI-Key': 'ISI_DENGAN_API_KEY_ASLIMU',
+                'X-RapidAPI-Host': 'social-media-scraper.p.rapidapi.com'
+            }
+        });
 
-        const results = await Promise.all([
-            fetch(`https://api.instagram.com/v1/?user=${username}`).then(res => res.json()).catch(() => ({ platform: 'Instagram', data: { bio: "Sample IG Bio", followers: 1000 } })),
-            fetch(`https://api.twitter.com/2/users_by_username/${username}`).then(res => res.json()).catch(() => ({ platform: 'Twitter', data: { handle: `@${username}`, bio: "Sample Twitter Bio" } })),
-        ]);
+        const data = await response.json();
 
-        // Menggabungkan hasil untuk dikirim ke Frontend
-        const finalData = {
+        // Logika Fallback: Jika data dari API tidak lengkap, kita isi dengan info dasar
+        const processedData = {
             username: username,
             scannedAt: new Date().toLocaleString(),
             platforms: [
-                { name: "Instagram", info: results[0].data },
-                { name: "Twitter/X", info: results[1].data },
-                { name: "TikTok", info: { bio: "Sample TikTok Bio", followers: 5000 } } // Mock data
+                {
+                    name: "Instagram",
+                    info: data.instagram || { bio: "No Bio Found", follower_count: 0 }
+                },
+                {
+                    name: "TikTok",
+                    info: data.tiktok || { description: "Not found" }
+                }
             ],
             contact: {
-                whatsapp: `https://wa.me/628xxxxxx` // Logika deteksi nomor dari bio bisa ditaruh di sini
+                // Pastikan ini berisi angka saja, tanpa karakter aneh
+                whatsapp_number: "6281234567890" // Ganti dengan logic deteksi nomor jika sudah ada
             }
         };
 
-        return NextResponse.json(finalData);
+        return NextResponse.json(processedData);
+
     } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
+        console.error("Error fetching data:", error);
+        // Return data default jika API utama gagal agar tidak 404/500 terus
+        return NextResponse.json({
+            username: username,
+            scannedAt: new Date().toLocaleString(),
+            platforms: [
+                { name: "Instagram", info: { bio: "Error fetching data from provider" } },
+                { name: "TikTok", info: { description: "Error fetching data from provider" } }
+            ],
+            contact: { whatsapp_number: "6281234567890" }
+        });
     }
 }
