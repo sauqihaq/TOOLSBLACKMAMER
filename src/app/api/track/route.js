@@ -14,7 +14,7 @@ export async function GET(request) {
 
         const results = await Promise.all([
             fetch(`https://api.instagram.com/v1/?user=${username}`).then(res => res.json()).catch(() => ({ platform: 'Instagram', data: { bio: "Sample IG Bio", followers: 1000 } })),
-            fetch(`https://api.twitter.com/2/users_by_username/${username}`).then(res => res.json()).catch(()era => ({ platform: 'Twitter', data: { handle: `@${username}`, bio: "Sample Twitter Bio" } })),
+            fetch(`https://api.twitter.com/2/users_by_username/${username}`).then(res => res.json()).catch(() => ({ platform: 'Twitter', data: { handle: `@${username}`, bio: "Sample Twitter Bio" } })),
         ]);
 
         // Menggabungkan hasil untuk dikirim ke Frontend
